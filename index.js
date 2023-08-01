@@ -133,7 +133,7 @@ app.post('/produto/add',(req, res) => {
   let sql = "UPDATE estoque SET estoque='"+req.body.product_quantidade+"' WHERE id="+req.body.id;
   let query = conn.query(sql, (err, results) => {
     if(err) throw err;
-    res.redirect('/estoque');
+    res.redirect('/');
   });
 });
 
