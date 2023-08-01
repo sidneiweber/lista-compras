@@ -1,0 +1,199 @@
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Estoque da Casa</title>
+  <link href="/assets/css/newbootstrap.css" rel="stylesheet" type="text/css"/>
+  <link href="//cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.css" type="text/css" rel="stylesheet" />
+  <link rel="shortcut icon" href="/assets/favicon.ico" />
+</head>
+<body>
+
+<div class="topnav" id="myTopnav">
+  <a href="/" class="active">Estoque da casa</a>
+  <a href="/produtos">Produtos</a>
+  <a href="javascript:void(0);" class="icon" onclick="myFunction()">
+    <i class="fa fa-bars"></i>
+  </a>
+</div>
+
+  <form id="busca" action="/search" method="POST" class="form-inline my-2 my-lg-0">
+    <input name="busca" class="form-control mr-sm-2" type="search" placeholder="Pesquise pelo Produto" aria-label="Search">
+    <button id="busca" class="btn btn-outline-success my-2 my-sm-0" type="submit">Buscar</button>
+  </form>
+
+  <div class="container-fluid">
+    <h2>Lista produtos</h2>
+		<button class="btn btn-success" data-toggle="modal" data-target="#myModalAdd">Adicionar novo produto</button>
+    <table id="mytable">
+      <thead>
+        <tr>
+          <th scope="col">Foto</th>
+          <th scope="col">Produto</th>
+          <th scope="col">Categoria</th>
+          <th scope="col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+         {{#each results}}
+        <tr>
+          <td scope="row" data-label="Foto"><a href="/assets/fotos/{{ foto }}" data-featherlight="/assets/fotos/{{ foto }}"><img id="foto" width="64" height="64" src="/assets/fotos/{{ foto }}"/></a></td>
+          <td data-label="Produto">{{ produto }} </td>
+          <td data-label="Categoria">{{ categoria }} </td>
+          <td data-label="Ações">
+            <a href="javascript:void(0);" class="btn btn-sm btn-info edit" data-id="{{ id }}" data-product_produto="{{ produto }}" data-product_categoria="{{ categoria }}" data-product_estoque="{{ estoque }}">Editar</a>
+            <a href="javascript:void(0);" class="btn btn-sm btn-danger delete" data-id="{{ id }}">Excluir</a>
+            <a href="javascript:void(0);" class="btn btn-sm btn-warning remove" data-id="{{ id }}">Zerar</a>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+	<!-- Add New Product Modal-->
+	  <form action="/produto/save" enctype="multipart/form-data" method="post">
+        <div class="modal fade" id="myModalAdd" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+         <div class="modal-dialog" role="document">
+           <div class="modal-content">
+             <div class="modal-header">
+               <h5 class="modal-title" id="exampleModalLabel">Adicionar novo produto</h5>
+               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                 <span aria-hidden="true">&times;</span>
+               </button>
+             </div>
+             <div class="modal-body">
+              <div class="form-group">
+                  <input type="text" name="product_produto" class="form-control product_produto" placeholder="Produto" required>
+              </div>
+              <div class="form-group">
+                  <input type="text" name="product_categoria" class="form-control product_categoria" placeholder="Categoria">
+              </div>
+              <div class="form-group">
+                  <input type="number" name="product_estoque" class="form-control product_estoque" placeholder="Estoque">
+              </div>
+              <div class="form-group">
+                  <input type="file" accept="image/*" name="product_foto">
+              </div>
+             </div>
+             <div class="modal-footer">
+               <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+               <button type="submit" class="btn btn-primary">Salvar</button>
+             </div>
+           </div>
+         </div>
+        </div>
+	 </form>
+
+	 <!-- Edit Product Modal-->
+   <form action="/produto/update" enctype="multipart/form-data" method="post">
+       <div class="modal fade" id="EditModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Editar Produto</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                  <input type="text" name="product_produto" class="form-control product_produto" placeholder="Produto" required>
+              </div>
+              <div class="form-group">
+                  <input type="text" name="product_categoria" class="form-control product_categoria" placeholder="Categoria">
+              </div>
+              <div class="form-group">
+                  <input type="number" name="product_estoque" class="form-control product_estoque" placeholder="Estoque">
+              </div>
+              <div class="form-group">
+                  <input type="file" accept="image/*" name="product_foto">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <input type="hidden" name="id" class="product_id">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+              <button type="submit" class="btn btn-primary">Atualizar</button>
+            </div>
+          </div>
+        </div>
+       </div>
+  </form>
+
+	 <!-- Zera estoque Modal-->
+ 	  <form id="add-row-form" action="/produto/remove" method="post">
+ 	     <div class="modal fade" id="RemoveModal" tabindex="-1" role="dialog" aria-labelledby="RemoveModal" aria-hidden="true">
+ 	        <div class="modal-dialog">
+ 	           <div class="modal-content">
+ 	               <div class="modal-header">
+									 	<h5 class="modal-title" id="myModalLabel">Zerar Estoque</h5>
+ 	                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+ 	               </div>
+ 	               <div class="modal-body">
+												 <strong>Tem certeza que quer zerar o estoque?</strong>
+ 	               </div>
+ 	               <div class="modal-footer">
+									 		<input type="hidden" name="product_id" class="form-control product_id2" required>
+ 	                   	<button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+ 	                  	<button type="submit" class="btn btn-warning">Zerar</button>
+ 	               </div>
+ 	      			</div>
+ 	        </div>
+ 	     </div>
+ 	 </form>
+
+	 <!-- Delete Product Modal-->
+ 	  <form id="add-row-form" action="/delete" method="post">
+ 	     <div class="modal fade" id="DeleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+ 	        <div class="modal-dialog">
+ 	           <div class="modal-content">
+ 	               <div class="modal-header">
+									 	<h5 class="modal-title" id="myModalLabel">Deletar Produto</h5>
+ 	                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+ 	               </div>
+ 	               <div class="modal-body">
+												 <strong>Tem certeza que quer remover o produto?</strong>
+ 	               </div>
+ 	               <div class="modal-footer">
+									 		<input type="hidden" name="product_id" class="form-control product_id2" required>
+ 	                   	<button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+ 	                  	<button type="submit" class="btn btn-danger">Excluir</button>
+ 	               </div>
+ 	      			</div>
+ 	        </div>
+ 	     </div>
+ 	 </form>
+
+<script src="/assets/js/jquery-3.3.1.js"></script>
+<script src="/assets/js/bootstrap.js"></script>
+<script src="//cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    $(document).ready(function(){
+		//showing data to modal for edit record
+      $('#mytable').on('click','.edit',function(){
+        var product_id = $(this).data('id');
+        var product_foto = $(this).data('product_foto');
+        var product_produto = $(this).data('product_produto');
+        var product_categoria = $(this).data('product_categoria');
+        var product_estoque = $(this).data('product_estoque');
+        $('#EditModal').modal('show');
+        $('.product_foto').val(product_foto);
+        $('.product_produto').val(product_produto);
+        $('.product_categoria').val(product_categoria);
+        $('.product_estoque').val(product_estoque);
+        $('.product_id').val(product_id);
+      });
+			$('#mytable').on('click','.remove',function(){
+        var product_id = $(this).data('id');
+        $('#RemoveModal').modal('show');
+        $('.product_id2').val(product_id);
+      });
+			//showing modal for delete record
+			$('#mytable').on('click','.delete',function(){
+        var product_id = $(this).data('id');
+        $('#DeleteModal').modal('show');
+        $('.product_id2').val(product_id);
+      });
+    });
+</script>
+</body>
+</html>
