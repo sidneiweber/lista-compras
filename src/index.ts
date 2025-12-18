@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs';
 import express, { Request, Response } from 'express';
 import fileUpload, { UploadedFile } from 'express-fileupload';
 import hbs from 'hbs';
@@ -34,6 +35,66 @@ const ensureSchema = (conn: mysql.Connection) => {
       throw err;
     }
     console.log('Tabela "estoque" verificada/criada com sucesso.');
+    
+    // Após criar a tabela, verifica se precisa fazer seed
+    seedDatabase(conn);
+  });
+};
+
+// Popula o banco com produtos iniciais apenas se a tabela estiver vazia
+const seedDatabase = (conn: mysql.Connection) => {
+  // Verifica se já existem produtos no banco
+  conn.query('SELECT COUNT(*) as count FROM estoque', (err, results: Array<{ count: number }>) => {
+    if (err) {
+      console.error('Erro ao verificar se banco precisa de seed:', err);
+      return;
+    }
+
+    const count = results[0]?.count || 0;
+    
+    if (count > 0) {
+      console.log(`Banco já possui ${count} produto(s). Seed não será executado.`);
+      return;
+    }
+
+    // Se a tabela estiver vazia, executa o seed
+    const seedFilePath = path.join(__dirname, '..', 'seed.sql');
+    
+    if (!fs.existsSync(seedFilePath)) {
+      console.log('Arquivo seed.sql não encontrado. Pulando seed.');
+      return;
+    }
+
+    const seedSql = fs.readFileSync(seedFilePath, 'utf-8');
+    
+    // Remove comentários e linhas vazias, depois divide por ponto e vírgula
+    const statements = seedSql
+      .split(';')
+      .map((stmt) => stmt.trim())
+      .filter((stmt) => stmt.length > 0 && !stmt.startsWith('--'));
+
+    let executed = 0;
+    let errors = 0;
+
+    statements.forEach((statement, index) => {
+      conn.query(statement, (queryErr) => {
+        if (queryErr) {
+          console.error(`Erro ao executar statement ${index + 1} do seed:`, queryErr.message);
+          errors++;
+        } else {
+          executed++;
+        }
+
+        // Quando todos os statements forem processados
+        if (executed + errors === statements.length) {
+          if (errors === 0) {
+            console.log(`✅ Seed executado com sucesso! ${executed} produto(s) inserido(s).`);
+          } else {
+            console.log(`⚠️ Seed executado com ${errors} erro(s). ${executed} produto(s) inserido(s).`);
+          }
+        }
+      });
+    });
   });
 };
 
