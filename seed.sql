@@ -79,3 +79,4 @@ INSERT INTO estoque (produto, categoria, estoque) VALUES ('SORVETE', 'CONGELADOS
 INSERT INTO estoque (produto, categoria, estoque) VALUES ('HAMBÚRGUER', 'CONGELADOS', '0');
 INSERT INTO estoque (produto, categoria, estoque) VALUES ('LASANHA CONGELADA', 'CONGELADOS', '0');
 
+

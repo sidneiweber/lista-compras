@@ -22,10 +22,12 @@ RUN npm install --only=production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/views ./views
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/seed.sql ./seed.sql
 
 EXPOSE 5000
 
 CMD ["node", "dist/index.js"]
+
 
 
 
