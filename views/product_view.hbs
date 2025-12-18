@@ -1,199 +1,465 @@
-<html lang="en">
+<html lang="pt-BR">
 <head>
-	<meta charset="utf-8">
-	<title>Estoque da Casa</title>
-  <link href="/assets/css/newbootstrap.css" rel="stylesheet" type="text/css"/>
-  <link href="//cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.css" type="text/css" rel="stylesheet" />
+  <meta charset="utf-8">
+  <title>Estoque da Casa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="shortcut icon" href="/assets/favicon.ico" />
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight text-white">Estoque da casa</h1>
+        <p class="text-sm text-slate-400">Gerencie todos os produtos e o estoque da casa.</p>
+      </div>
+      <nav class="flex flex-wrap gap-2">
+        <a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-slate-200 hover:bg-slate-800/80">
+          Itens para comprar
+        </a>
+        <a href="/compras" class="px-3 py-2 rounded-md text-sm font-medium text-slate-200 hover:bg-slate-800/80">
+          Modo mercado
+        </a>
+        <a href="/produtos" class="px-3 py-2 rounded-md text-sm font-medium bg-slate-800 text-white shadow-sm">
+          Produtos
+        </a>
+      </nav>
+    </header>
 
-<div class="topnav" id="myTopnav">
-  <a href="/" class="active">Estoque da casa</a>
-  <a href="/produtos">Produtos</a>
-  <a href="javascript:void(0);" class="icon" onclick="myFunction()">
-    <i class="fa fa-bars"></i>
-  </a>
-</div>
+    <section class="mb-4">
+      <form
+        id="busca"
+        action="/search"
+        method="POST"
+        class="flex flex-col gap-3 sm:flex-row sm:items-center"
+      >
+        <div class="relative flex-1">
+          <input
+            name="busca"
+            type="search"
+            placeholder="Pesquise pelo nome do produto..."
+            aria-label="Buscar produto"
+            class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 pl-9 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+          />
+          <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-500 text-sm">🔍</span>
+        </div>
+        <button
+          id="buscaBtn"
+          type="submit"
+          class="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 shadow-sm hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+        >
+          Buscar
+        </button>
+      </form>
+    </section>
 
-  <form id="busca" action="/search" method="POST" class="form-inline my-2 my-lg-0">
-    <input name="busca" class="form-control mr-sm-2" type="search" placeholder="Pesquise pelo Produto" aria-label="Search">
-    <button id="busca" class="btn btn-outline-success my-2 my-sm-0" type="submit">Buscar</button>
-  </form>
+    <section class="bg-slate-900/60 border border-slate-800 rounded-xl shadow-lg backdrop-blur-sm">
+      <div class="flex items-center justify-between px-4 py-4 border-b border-slate-800">
+        <h2 class="text-lg font-semibold text-white">Produtos cadastrados</h2>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-md bg-emerald-500 px-3 py-1.5 text-sm font-medium text-slate-950 shadow-sm hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+          onclick="openAddModal()"
+        >
+          <span class="text-lg leading-none">＋</span>
+          Adicionar novo
+        </button>
+      </div>
 
-  <div class="container-fluid">
-    <h2>Lista produtos</h2>
-		<button class="btn btn-success" data-toggle="modal" data-target="#myModalAdd">Adicionar novo produto</button>
-    <table id="mytable">
-      <thead>
-        <tr>
-          <th scope="col">Foto</th>
-          <th scope="col">Produto</th>
-          <th scope="col">Categoria</th>
-          <th scope="col">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-         {{#each results}}
-        <tr>
-          <td scope="row" data-label="Foto"><a href="/assets/fotos/{{ foto }}" data-featherlight="/assets/fotos/{{ foto }}"><img id="foto" width="64" height="64" src="/assets/fotos/{{ foto }}"/></a></td>
-          <td data-label="Produto">{{ produto }} </td>
-          <td data-label="Categoria">{{ categoria }} </td>
-          <td data-label="Ações">
-            <a href="javascript:void(0);" class="btn btn-sm btn-info edit" data-id="{{ id }}" data-product_produto="{{ produto }}" data-product_categoria="{{ categoria }}" data-product_estoque="{{ estoque }}">Editar</a>
-            <a href="javascript:void(0);" class="btn btn-sm btn-danger delete" data-id="{{ id }}">Excluir</a>
-            <a href="javascript:void(0);" class="btn btn-sm btn-warning remove" data-id="{{ id }}">Zerar</a>
-          </td>
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-slate-200" id="mytable">
+          <thead class="bg-slate-900/80 border-b border-slate-800 text-xs uppercase tracking-wide text-slate-400">
+            <tr>
+              <th scope="col" class="px-4 py-3">Foto</th>
+              <th scope="col" class="px-4 py-3">Produto</th>
+              <th scope="col" class="px-4 py-3">Categoria</th>
+              <th scope="col" class="px-4 py-3 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800">
+            {{#each results}}
+            <tr class="hover:bg-slate-900/60 transition-colors">
+              <td class="px-4 py-3">
+                {{#if foto}}
+                  <button
+                    type="button"
+                    class="relative block h-14 w-14 overflow-hidden rounded-lg border border-slate-800 bg-slate-900"
+                    onclick="openImage('/assets/fotos/{{ foto }}')"
+                  >
+                    <img
+                      src="/assets/fotos/{{ foto }}"
+                      alt="{{ produto }}"
+                      class="h-full w-full object-cover"
+                    />
+                  </button>
+                {{else}}
+                  <span class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-slate-700 text-xs text-slate-500">
+                    Sem foto
+                  </span>
+                {{/if}}
+              </td>
+              <td class="px-4 py-3 font-medium text-slate-100">
+                {{ produto }}
+              </td>
+              <td class="px-4 py-3 text-slate-300">
+                {{ categoria }}
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    class="inline-flex items-center rounded-md bg-sky-500 px-3 py-1.5 text-xs font-medium text-slate-950 shadow-sm hover:bg-sky-400"
+                    data-id="{{ id }}"
+                    data-product_produto="{{ produto }}"
+                    data-product_categoria="{{ categoria }}"
+                    data-product_estoque="{{ estoque }}"
+                    onclick="openEditModal(this)"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center rounded-md bg-amber-500 px-3 py-1.5 text-xs font-medium text-slate-950 shadow-sm hover:bg-amber-400"
+                    data-id="{{ id }}"
+                    onclick="openRemoveModal(this)"
+                  >
+                    Zerar
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center rounded-md bg-rose-500 px-3 py-1.5 text-xs font-medium text-slate-950 shadow-sm hover:bg-rose-400"
+                    data-id="{{ id }}"
+                    onclick="openDeleteModal(this)"
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
-	<!-- Add New Product Modal-->
-	  <form action="/produto/save" enctype="multipart/form-data" method="post">
-        <div class="modal fade" id="myModalAdd" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-         <div class="modal-dialog" role="document">
-           <div class="modal-content">
-             <div class="modal-header">
-               <h5 class="modal-title" id="exampleModalLabel">Adicionar novo produto</h5>
-               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                 <span aria-hidden="true">&times;</span>
-               </button>
-             </div>
-             <div class="modal-body">
-              <div class="form-group">
-                  <input type="text" onkeyup="this.value = this.value.toUpperCase();" name="product_produto" class="form-control product_produto" placeholder="Produto" required>
-              </div>
-              <div class="form-group">
-                  <input type="text" onkeyup="this.value = this.value.toUpperCase();" name="product_categoria" class="form-control product_categoria" placeholder="Categoria">
-              </div>
-              <div class="form-group">
-                  <input type="number" name="product_estoque" class="form-control product_estoque" placeholder="Estoque" value="0">
-              </div>
-              <div class="form-group">
-                  <input type="file" accept="image/*" name="product_foto">
-              </div>
-             </div>
-             <div class="modal-footer">
-               <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-               <button type="submit" class="btn btn-primary">Salvar</button>
-             </div>
-           </div>
-         </div>
+  <!-- Modal Adicionar Produto -->
+  <div
+    id="modalAdd"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 backdrop-blur-sm"
+    aria-hidden="true"
+  >
+    <div class="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl">
+      <form action="/produto/save" enctype="multipart/form-data" method="post">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+          <h3 class="text-base font-semibold text-white">Adicionar novo produto</h3>
+          <button
+            type="button"
+            class="rounded-full p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            onclick="closeAddModal()"
+          >
+            ✕
+          </button>
         </div>
-	 </form>
-
-	 <!-- Edit Product Modal-->
-   <form action="/produto/update" enctype="multipart/form-data" method="post">
-       <div class="modal fade" id="EditModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">Editar Produto</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              <div class="form-group">
-                  <input type="text" onkeyup="this.value = this.value.toUpperCase();" name="product_produto" class="form-control product_produto" placeholder="Produto" required>
-              </div>
-              <div class="form-group">
-                  <input type="text" onkeyup="this.value = this.value.toUpperCase();" name="product_categoria" class="form-control product_categoria" placeholder="Categoria">
-              </div>
-              <div class="form-group">
-                  <input type="number" name="product_estoque" class="form-control product_estoque" placeholder="Estoque">
-              </div>
-              <div class="form-group">
-                  <input type="file" accept="image/*" name="product_foto">
-              </div>
-            </div>
-            <div class="modal-footer">
-              <input type="hidden" name="id" class="product_id">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-              <button type="submit" class="btn btn-primary">Atualizar</button>
-            </div>
+        <div class="px-5 py-4 space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Produto</label>
+            <input
+              type="text"
+              name="product_produto"
+              class="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              placeholder="Ex: FEIJÃO"
+              onkeyup="this.value = this.value.toUpperCase();"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Categoria</label>
+            <input
+              type="text"
+              name="product_categoria"
+              class="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              placeholder="Ex: MERCEARIA"
+              onkeyup="this.value = this.value.toUpperCase();"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Estoque</label>
+            <input
+              type="number"
+              name="product_estoque"
+              class="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              placeholder="0"
+              value="0"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Foto (opcional)</label>
+            <input
+              type="file"
+              accept="image/*"
+              name="product_foto"
+              class="block w-full text-xs text-slate-300 file:mr-3 file:rounded-md file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-100 hover:file:bg-slate-700"
+            />
           </div>
         </div>
-       </div>
-  </form>
+        <div class="flex justify-end gap-2 px-5 py-4 border-t border-slate-800 bg-slate-900/80">
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+            onclick="closeAddModal()"
+          >
+            Fechar
+          </button>
+          <button
+            type="submit"
+            class="rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-sm hover:bg-emerald-400"
+          >
+            Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-	 <!-- Zera estoque Modal-->
- 	  <form id="add-row-form" action="/produto/remove" method="post">
- 	     <div class="modal fade" id="RemoveModal" tabindex="-1" role="dialog" aria-labelledby="RemoveModal" aria-hidden="true">
- 	        <div class="modal-dialog">
- 	           <div class="modal-content">
- 	               <div class="modal-header">
-									 	<h5 class="modal-title" id="myModalLabel">Zerar Estoque</h5>
- 	                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
- 	               </div>
- 	               <div class="modal-body">
-												 <strong>Tem certeza que quer zerar o estoque?</strong>
- 	               </div>
- 	               <div class="modal-footer">
-									 		<input type="hidden" name="product_id" class="form-control product_id2" required>
- 	                   	<button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
- 	                  	<button type="submit" class="btn btn-warning">Zerar</button>
- 	               </div>
- 	      			</div>
- 	        </div>
- 	     </div>
- 	 </form>
+  <!-- Modal Editar Produto -->
+  <div
+    id="modalEdit"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 backdrop-blur-sm"
+    aria-hidden="true"
+  >
+    <div class="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl">
+      <form action="/produto/update" enctype="multipart/form-data" method="post">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+          <h3 class="text-base font-semibold text-white">Editar produto</h3>
+          <button
+            type="button"
+            class="rounded-full p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            onclick="closeEditModal()"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="px-5 py-4 space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Produto</label>
+            <input
+              type="text"
+              name="product_produto"
+              class="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              onkeyup="this.value = this.value.toUpperCase();"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Categoria</label>
+            <input
+              type="text"
+              name="product_categoria"
+              class="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              onkeyup="this.value = this.value.toUpperCase();"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Estoque</label>
+            <input
+              type="number"
+              name="product_estoque"
+              class="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Nova foto (opcional)</label>
+            <input
+              type="file"
+              accept="image/*"
+              name="product_foto"
+              class="block w-full text-xs text-slate-300 file:mr-3 file:rounded-md file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-100 hover:file:bg-slate-700"
+            />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 px-5 py-4 border-t border-slate-800 bg-slate-900/80">
+          <input type="hidden" name="id" class="product_id" />
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+            onclick="closeEditModal()"
+          >
+            Fechar
+          </button>
+          <button
+            type="submit"
+            class="rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-sm hover:bg-emerald-400"
+          >
+            Atualizar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-	 <!-- Delete Product Modal-->
- 	  <form id="add-row-form" action="/delete" method="post">
- 	     <div class="modal fade" id="DeleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
- 	        <div class="modal-dialog">
- 	           <div class="modal-content">
- 	               <div class="modal-header">
-									 	<h5 class="modal-title" id="myModalLabel">Deletar Produto</h5>
- 	                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
- 	               </div>
- 	               <div class="modal-body">
-												 <strong>Tem certeza que quer remover o produto?</strong>
- 	               </div>
- 	               <div class="modal-footer">
-									 		<input type="hidden" name="product_id" class="form-control product_id2" required>
- 	                   	<button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
- 	                  	<button type="submit" class="btn btn-danger">Excluir</button>
- 	               </div>
- 	      			</div>
- 	        </div>
- 	     </div>
- 	 </form>
+  <!-- Modal Zerar Estoque -->
+  <div
+    id="modalRemove"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 backdrop-blur-sm"
+    aria-hidden="true"
+  >
+    <div class="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl">
+      <form action="/produto/remove" method="post">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+          <h3 class="text-base font-semibold text-white">Zerar estoque</h3>
+          <button
+            type="button"
+            class="rounded-full p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            onclick="closeRemoveModal()"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="px-5 py-4 space-y-2">
+          <p class="text-sm text-slate-200">
+            Tem certeza que deseja zerar o estoque deste produto?
+          </p>
+        </div>
+        <div class="flex justify-end gap-2 px-5 py-4 border-t border-slate-800 bg-slate-900/80">
+          <input type="hidden" name="product_id" class="product_id_remove" required />
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+            onclick="closeRemoveModal()"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="rounded-md bg-amber-500 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-sm hover:bg-amber-400"
+          >
+            Zerar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-<script src="/assets/js/jquery-3.3.1.js"></script>
-<script src="/assets/js/bootstrap.js"></script>
-<script src="//cdn.rawgit.com/noelboss/featherlight/1.7.13/release/featherlight.min.js" type="text/javascript" charset="utf-8"></script>
-<script>
-    $(document).ready(function(){
-		//showing data to modal for edit record
-      $('#mytable').on('click','.edit',function(){
-        var product_id = $(this).data('id');
-        var product_foto = $(this).data('product_foto');
-        var product_produto = $(this).data('product_produto');
-        var product_categoria = $(this).data('product_categoria');
-        var product_estoque = $(this).data('product_estoque');
-        $('#EditModal').modal('show');
-        $('.product_foto').val(product_foto);
-        $('.product_produto').val(product_produto);
-        $('.product_categoria').val(product_categoria);
-        $('.product_estoque').val(product_estoque);
-        $('.product_id').val(product_id);
-      });
-			$('#mytable').on('click','.remove',function(){
-        var product_id = $(this).data('id');
-        $('#RemoveModal').modal('show');
-        $('.product_id2').val(product_id);
-      });
-			//showing modal for delete record
-			$('#mytable').on('click','.delete',function(){
-        var product_id = $(this).data('id');
-        $('#DeleteModal').modal('show');
-        $('.product_id2').val(product_id);
-      });
-    });
-</script>
+  <!-- Modal Deletar Produto -->
+  <div
+    id="modalDelete"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 backdrop-blur-sm"
+    aria-hidden="true"
+  >
+    <div class="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl">
+      <form action="/delete" method="post">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+          <h3 class="text-base font-semibold text-white">Remover produto</h3>
+          <button
+            type="button"
+            class="rounded-full p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            onclick="closeDeleteModal()"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="px-5 py-4 space-y-2">
+          <p class="text-sm text-slate-200">
+            Tem certeza que deseja remover este produto do estoque?
+          </p>
+        </div>
+        <div class="flex justify-end gap-2 px-5 py-4 border-t border-slate-800 bg-slate-900/80">
+          <input type="hidden" name="product_id" class="product_id_delete" required />
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+            onclick="closeDeleteModal()"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="rounded-md bg-rose-500 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-sm hover:bg-rose-400"
+          >
+            Excluir
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal visualização de imagem -->
+  <div
+    id="imageViewer"
+    class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80"
+    onclick="closeImage()"
+  >
+    <img id="imageViewerImg" src="" alt="" class="max-h-[80vh] max-w-[90vw] rounded-lg border border-slate-700 shadow-2xl" />
+  </div>
+
+  <script>
+    function openAddModal() {
+      document.getElementById('modalAdd').classList.remove('hidden');
+      document.getElementById('modalAdd').classList.add('flex');
+    }
+    function closeAddModal() {
+      document.getElementById('modalAdd').classList.add('hidden');
+      document.getElementById('modalAdd').classList.remove('flex');
+    }
+    function openEditModal(btn) {
+      const modal = document.getElementById('modalEdit');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      const id = btn.getAttribute('data-id');
+      const produto = btn.getAttribute('data-product_produto') || '';
+      const categoria = btn.getAttribute('data-product_categoria') || '';
+      const estoque = btn.getAttribute('data-product_estoque') || '';
+
+      modal.querySelector('input[name=\"product_produto\"]').value = produto;
+      modal.querySelector('input[name=\"product_categoria\"]').value = categoria;
+      modal.querySelector('input[name=\"product_estoque\"]').value = estoque;
+      modal.querySelector('.product_id').value = id;
+    }
+    function closeEditModal() {
+      const modal = document.getElementById('modalEdit');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    function openRemoveModal(btn) {
+      const modal = document.getElementById('modalRemove');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      const id = btn.getAttribute('data-id');
+      modal.querySelector('.product_id_remove').value = id;
+    }
+    function closeRemoveModal() {
+      const modal = document.getElementById('modalRemove');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    function openDeleteModal(btn) {
+      const modal = document.getElementById('modalDelete');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      const id = btn.getAttribute('data-id');
+      modal.querySelector('.product_id_delete').value = id;
+    }
+    function closeDeleteModal() {
+      const modal = document.getElementById('modalDelete');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    function openImage(src) {
+      const viewer = document.getElementById('imageViewer');
+      const img = document.getElementById('imageViewerImg');
+      img.src = src;
+      viewer.classList.remove('hidden');
+      viewer.classList.add('flex');
+    }
+    function closeImage() {
+      const viewer = document.getElementById('imageViewer');
+      viewer.classList.add('hidden');
+      viewer.classList.remove('flex');
+      const img = document.getElementById('imageViewerImg');
+      img.src = '';
+    }
+  </script>
 </body>
 </html>

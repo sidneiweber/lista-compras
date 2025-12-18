@@ -1,0 +1,130 @@
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Lista de compras - Mercado</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="/assets/favicon.ico" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <div class="max-w-4xl mx-auto px-4 py-6">
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight text-white">Lista de compras</h1>
+        <p class="text-sm text-slate-400">
+          Use esta tela no mercado para marcar o que já foi comprado.
+        </p>
+      </div>
+      <nav class="flex flex-wrap gap-2">
+        <a href="/" class="px-3 py-1.5 rounded-md text-xs font-medium bg-slate-800 text-white shadow-sm">
+          Itens para comprar
+        </a>
+        <a href="/compras" class="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500 text-slate-950 shadow-sm">
+          Modo mercado
+        </a>
+        <a href="/produtos" class="px-3 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:bg-slate-800/80">
+          Produtos
+        </a>
+      </nav>
+    </header>
+
+    <section class="mb-4">
+      <form
+        action="/compras"
+        method="GET"
+        class="flex flex-col gap-3 sm:flex-row sm:items-center"
+      >
+        <div class="relative flex-1">
+          <input
+            name="busca"
+            type="search"
+            value="{{filtroBusca}}"
+            placeholder="Filtrar por nome do produto..."
+            aria-label="Buscar produto"
+            class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 pl-9 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+          />
+          <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-500 text-sm">
+            🔍
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <select
+            name="categoria"
+            class="w-40 rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-slate-100 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+          >
+            <option value="">Todas categorias</option>
+            {{#each categorias}}
+              <option value="{{ this }}" {{#if (eq ../filtroCategoria this)}}selected{{/if}}>
+                {{ this }}
+              </option>
+            {{/each}}
+          </select>
+          <button
+            type="submit"
+            class="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-3 py-2 text-xs font-medium text-slate-950 shadow-sm hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+          >
+            Aplicar filtros
+          </button>
+        </div>
+      </form>
+    </section>
+
+    {{#if results.length}}
+      <section class="space-y-3">
+        {{#each results}}
+          <div class="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2.5 shadow-sm">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-slate-50 truncate">
+                {{ produto }}
+              </p>
+              <p class="text-xs text-slate-400 truncate">
+                {{#if categoria}}{{ categoria }} · {{/if}}estoque atual: {{ estoque }}
+              </p>
+            </div>
+
+            <form
+              action="/produto/add"
+              method="post"
+              class="flex items-center gap-2"
+            >
+              <input type="hidden" name="id" value="{{ id }}" />
+              <label class="flex items-center gap-1.5 text-[11px] text-slate-300">
+                Qtd
+                <input
+                  type="number"
+                  name="product_quantidade"
+                  class="w-16 rounded-md border border-slate-700 bg-slate-900 px-1.5 py-1 text-[11px] text-slate-100 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                  value="1"
+                  min="1"
+                  inputmode="numeric"
+                  required
+                />
+              </label>
+              <button
+                type="submit"
+                class="inline-flex items-center rounded-md bg-emerald-500 px-3 py-1 text-[11px] font-semibold text-slate-950 shadow-sm hover:bg-emerald-400"
+              >
+                Comprado
+              </button>
+            </form>
+          </div>
+        {{/each}}
+      </section>
+    {{else}}
+      <section class="mt-10 flex flex-col items-center gap-3 text-center text-slate-400">
+        <div class="text-4xl">✅</div>
+        <p class="text-sm">Nenhum item em falta no momento. Seu estoque está em dia!</p>
+        <a
+          href="/produtos"
+          class="mt-2 inline-flex items-center rounded-md bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-slate-700"
+        >
+          Ver todos os produtos
+        </a>
+      </section>
+    {{/if}}
+  </div>
+</body>
+</html>
+
+
