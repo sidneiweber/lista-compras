@@ -14,17 +14,8 @@ const dbUser = process.env.DB_USER || 'root';
 const dbPassword = process.env.DB_PASS || 'bolacha';
 const dbName = process.env.DB_DATABASE || 'estoque';
 
-// Create MySQL connection
-const conn = mysql.createConnection({
-  host: dbHost,
-  user: dbUser,
-  password: dbPassword,
-  database: dbName,
-  //ssl: process.env.DB_HOST ? true : false
-});
-
 // Garante que a tabela `estoque` exista ao subir a aplicação
-const ensureSchema = () => {
+const ensureSchema = (conn: mysql.Connection) => {
   const createTableSql = `
     CREATE TABLE IF NOT EXISTS estoque (
       foto VARCHAR(255),
@@ -46,11 +37,57 @@ const ensureSchema = () => {
   });
 };
 
-conn.connect((err?: MysqlError) => {
-  if (err) throw err;
-  console.log('Mysql Connected...');
-  ensureSchema();
-});
+// Cria o database (schema) se não existir e depois conecta na base certa
+const initDatabase = () => {
+  // conexão inicial sem database para garantir o CREATE DATABASE
+  const bootstrapConn = mysql.createConnection({
+    host: dbHost,
+    user: dbUser,
+    password: dbPassword
+    //ssl: process.env.DB_HOST ? true : false
+  });
+
+  bootstrapConn.connect((err?: MysqlError) => {
+    if (err) {
+      console.error('Erro ao conectar no MySQL para criar database:', err);
+      throw err;
+    }
+
+    const createDbSql = `CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`;
+    bootstrapConn.query(createDbSql, (createErr) => {
+      if (createErr) {
+        console.error('Erro ao criar/verificar database:', createErr);
+        throw createErr;
+      }
+      console.log(`Database "${dbName}" verificado/criado com sucesso.`);
+      bootstrapConn.end();
+
+      // Agora sim, conexão principal já apontando para o database
+      const mainConn = mysql.createConnection({
+        host: dbHost,
+        user: dbUser,
+        password: dbPassword,
+        database: dbName
+        //ssl: process.env.DB_HOST ? true : false
+      });
+
+      mainConn.connect((errMain?: MysqlError) => {
+        if (errMain) {
+          console.error('Erro ao conectar no MySQL (conexão principal):', errMain);
+          throw errMain;
+        }
+        console.log('Mysql Connected...');
+        ensureSchema(mainConn);
+
+        // A partir daqui, usamos essa conexão global
+        (global as any).dbConn = mainConn;
+      });
+    });
+  });
+};
+
+// Inicializa database e conexões
+initDatabase();
 
 // View engine and middlewares
 app.set('views', path.join(__dirname, '..', 'views'));
@@ -88,9 +125,13 @@ interface ProdutoBody {
 hbs.registerHelper('eq', (a: unknown, b: unknown) => a === b);
 
 // Rotas
+const getConn = (): mysql.Connection => {
+  return (global as any).dbConn as mysql.Connection;
+};
+
 app.get('/produtos', (_req: Request, res: Response) => {
   const sql = 'SELECT * FROM estoque ORDER BY produto,descricao';
-  conn.query(sql, (err, results: EstoqueRow[]) => {
+  getConn().query(sql, (err, results: EstoqueRow[]) => {
     if (err) throw err;
     res.render('product_view', { results });
   });
@@ -98,7 +139,7 @@ app.get('/produtos', (_req: Request, res: Response) => {
 
 app.get('/', (_req: Request, res: Response) => {
   const sql = 'SELECT * FROM estoque WHERE estoque <= 0 ORDER BY produto,descricao';
-  conn.query(sql, (err, results: EstoqueRow[]) => {
+  getConn().query(sql, (err, results: EstoqueRow[]) => {
     if (err) throw err;
     res.render('estoque', { results });
   });
@@ -115,7 +156,7 @@ app.get(
     const sqlCategorias =
       'SELECT DISTINCT categoria FROM estoque WHERE categoria IS NOT NULL AND categoria <> "" ORDER BY categoria';
 
-    conn.query(sqlCategorias, (errCat, catResults: CategoriaRow[]) => {
+    getConn().query(sqlCategorias, (errCat, catResults: CategoriaRow[]) => {
       if (errCat) throw errCat;
 
       const categorias = catResults.map((row) => row.categoria).filter((c): c is string => !!c);
@@ -136,7 +177,7 @@ app.get(
 
       sqlProdutos += ' ORDER BY produto,descricao';
 
-      conn.query(sqlProdutos, params, (errProd, results: EstoqueRow[]) => {
+      getConn().query(sqlProdutos, params, (errProd, results: EstoqueRow[]) => {
         if (errProd) throw errProd;
         res.render('compras', {
           results,
@@ -152,7 +193,7 @@ app.get(
 app.post('/search', (req: Request<unknown, unknown, { busca?: string }>, res: Response) => {
   const busca = req.body.busca || '';
   const sql = "SELECT * FROM estoque WHERE produto LIKE ? ORDER BY produto,descricao";
-  conn.query(sql, [`${busca}%`], (err, results: EstoqueRow[]) => {
+  getConn().query(sql, [`${busca}%`], (err, results: EstoqueRow[]) => {
     if (err) throw err;
     res.render('product_view', { results });
   });
@@ -178,7 +219,7 @@ app.post('/produto/save', (req: Request<unknown, unknown, ProdutoBody>, res: Res
   };
 
   const sql = 'INSERT INTO estoque SET ?';
-  conn.query(sql, data, (err) => {
+  getConn().query(sql, data, (err) => {
     if (err) throw err;
     res.redirect('/');
   });
@@ -211,7 +252,7 @@ app.post('/produto/update', (req: Request<unknown, unknown, ProdutoBody>, res: R
 
   params.push(Number(id));
 
-  conn.query(sql, params, (err) => {
+  getConn().query(sql, params, (err) => {
     if (err) throw err;
     res.redirect('/');
   });
@@ -222,7 +263,7 @@ app.post('/produto/add', (req: Request<unknown, unknown, ProdutoBody>, res: Resp
   if (!id) return res.status(400).send('ID obrigatório');
 
   const sql = 'UPDATE estoque SET estoque=? WHERE id=?';
-  conn.query(sql, [product_quantidade || 0, Number(id)], (err) => {
+  getConn().query(sql, [product_quantidade || 0, Number(id)], (err) => {
     if (err) throw err;
     res.redirect('/');
   });
@@ -233,7 +274,7 @@ app.post('/produto/remove', (req: Request<unknown, unknown, ProdutoBody>, res: R
   if (!product_id) return res.status(400).send('ID obrigatório');
 
   const sql = "UPDATE estoque SET estoque='0' WHERE id=?";
-  conn.query(sql, [Number(product_id)], (err) => {
+  getConn().query(sql, [Number(product_id)], (err) => {
     if (err) throw err;
     res.redirect('/');
   });
@@ -244,7 +285,7 @@ app.post('/delete', (req: Request<unknown, unknown, ProdutoBody>, res: Response)
   if (!product_id) return res.status(400).send('ID obrigatório');
 
   const sql = 'DELETE FROM estoque WHERE id=? LIMIT 1';
-  conn.query(sql, [Number(product_id)], (err) => {
+  getConn().query(sql, [Number(product_id)], (err) => {
     if (err) throw err;
     res.redirect('/');
   });
