@@ -16,7 +16,7 @@
     "cache": "^2.3.1",
     "dd-trace": "^1.6.0",
     "express": "^4.16.3",
-    "express-fileupload": "^1.1.4",
+    "express-fileupload": "^1.4.0",
     "hbs": "^4.0.1",
     "multer": "^1.4.1",
     "mysql": "^2.18.1"
