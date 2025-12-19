@@ -180,6 +180,9 @@ interface ProdutoBody {
   product_categoria?: string;
   product_estoque?: string;
   product_quantidade?: string;
+  modo_mercado?: string;
+  categoria?: string;
+  busca?: string;
 }
 
 // Helpers de template
@@ -199,10 +202,10 @@ app.get('/produtos', (_req: Request, res: Response) => {
 });
 
 app.get('/', (_req: Request, res: Response) => {
-  const sql = 'SELECT * FROM estoque WHERE estoque <= 0 ORDER BY produto,descricao';
+  const sql = 'SELECT * FROM estoque ORDER BY produto,descricao';
   getConn().query(sql, (err, results: EstoqueRow[]) => {
     if (err) throw err;
-    res.render('estoque', { results });
+    res.render('product_view', { results });
   });
 });
 
@@ -282,7 +285,7 @@ app.post('/produto/save', (req: Request<unknown, unknown, ProdutoBody>, res: Res
   const sql = 'INSERT INTO estoque SET ?';
   getConn().query(sql, data, (err) => {
     if (err) throw err;
-    res.redirect('/');
+    res.redirect('/produtos');
   });
 });
 
@@ -315,18 +318,28 @@ app.post('/produto/update', (req: Request<unknown, unknown, ProdutoBody>, res: R
 
   getConn().query(sql, params, (err) => {
     if (err) throw err;
-    res.redirect('/');
+    res.redirect('/produtos');
   });
 });
 
 app.post('/produto/add', (req: Request<unknown, unknown, ProdutoBody>, res: Response) => {
-  const { id, product_quantidade } = req.body;
+  const { id, product_quantidade, modo_mercado, categoria, busca } = req.body;
   if (!id) return res.status(400).send('ID obrigatório');
 
   const sql = 'UPDATE estoque SET estoque=? WHERE id=?';
   getConn().query(sql, [product_quantidade || 0, Number(id)], (err) => {
     if (err) throw err;
-    res.redirect('/');
+    
+    // Se veio do modo mercado, redireciona de volta para /compras preservando os filtros
+    if (modo_mercado === 'true') {
+      const params = new URLSearchParams();
+      if (categoria) params.append('categoria', categoria);
+      if (busca) params.append('busca', busca);
+      const queryString = params.toString();
+      res.redirect(`/compras${queryString ? `?${queryString}` : ''}`);
+    } else {
+      res.redirect('/produtos');
+    }
   });
 });
 
@@ -337,7 +350,7 @@ app.post('/produto/remove', (req: Request<unknown, unknown, ProdutoBody>, res: R
   const sql = "UPDATE estoque SET estoque='0' WHERE id=?";
   getConn().query(sql, [Number(product_id)], (err) => {
     if (err) throw err;
-    res.redirect('/');
+    res.redirect('/produtos');
   });
 });
 
@@ -348,7 +361,7 @@ app.post('/delete', (req: Request<unknown, unknown, ProdutoBody>, res: Response)
   const sql = 'DELETE FROM estoque WHERE id=? LIMIT 1';
   getConn().query(sql, [Number(product_id)], (err) => {
     if (err) throw err;
-    res.redirect('/');
+    res.redirect('/produtos');
   });
 });
 

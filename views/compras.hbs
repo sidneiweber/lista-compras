@@ -16,14 +16,11 @@
         </p>
       </div>
       <nav class="flex flex-wrap gap-2">
-        <a href="/" class="px-3 py-1.5 rounded-md text-xs font-medium bg-slate-800 text-white shadow-sm">
-          Itens para comprar
+        <a href="/" class="px-3 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:bg-slate-800/80">
+          Todos os produtos
         </a>
         <a href="/compras" class="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500 text-slate-950 shadow-sm">
           Modo mercado
-        </a>
-        <a href="/produtos" class="px-3 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:bg-slate-800/80">
-          Produtos
         </a>
       </nav>
     </header>
@@ -89,6 +86,9 @@
               class="flex items-center gap-2"
             >
               <input type="hidden" name="id" value="{{ id }}" />
+              <input type="hidden" name="modo_mercado" value="true" />
+              <input type="hidden" name="categoria" value="{{ ../filtroCategoria }}" />
+              <input type="hidden" name="busca" value="{{ ../filtroBusca }}" />
               <label class="flex items-center gap-1.5 text-[11px] text-slate-300">
                 Qtd
                 <input
@@ -116,7 +116,7 @@
         <div class="text-4xl">✅</div>
         <p class="text-sm">Nenhum item em falta no momento. Seu estoque está em dia!</p>
         <a
-          href="/produtos"
+          href="/"
           class="mt-2 inline-flex items-center rounded-md bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-slate-700"
         >
           Ver todos os produtos
