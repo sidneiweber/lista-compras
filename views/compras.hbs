@@ -27,18 +27,21 @@
 
     <section class="mb-4">
       <form
+        id="filtroForm"
         action="/compras"
         method="GET"
         class="flex flex-col gap-3 sm:flex-row sm:items-center"
       >
         <div class="relative flex-1">
           <input
+            id="filtroBusca"
             name="busca"
             type="search"
             value="{{filtroBusca}}"
             placeholder="Filtrar por nome do produto..."
             aria-label="Buscar produto"
             class="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 pl-9 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+            oninput="clearTimeout(window.buscaTimeout); window.buscaTimeout = setTimeout(() => document.getElementById('filtroForm').submit(), 500)"
           />
           <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-500 text-sm">
             🔍
@@ -48,7 +51,9 @@
         <div class="flex items-center gap-2">
           <select
             name="categoria"
+            id="filtroCategoria"
             class="w-40 rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-slate-100 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+            onchange="document.getElementById('filtroForm').submit()"
           >
             <option value="">Todas categorias</option>
             {{#each categorias}}
@@ -124,6 +129,36 @@
       </section>
     {{/if}}
   </div>
+
+  <script>
+    // Aplica filtros automaticamente ao mudar categoria ou digitar na busca
+    // O campo de busca já tem oninput com debounce, e o select já tem onchange
+    // Este script garante que tudo funcione corretamente
+    document.addEventListener('DOMContentLoaded', function() {
+      const categoriaSelect = document.getElementById('filtroCategoria');
+      const buscaInput = document.getElementById('filtroBusca');
+      const filtroForm = document.getElementById('filtroForm');
+
+      // Select de categoria já tem onchange inline, mas garantimos aqui também
+      if (categoriaSelect) {
+        categoriaSelect.addEventListener('change', function() {
+          filtroForm.submit();
+        });
+      }
+
+      // Campo de busca já tem oninput com debounce inline
+      // Mas podemos adicionar um listener adicional se necessário
+      if (buscaInput) {
+        // Limpa o timeout anterior quando o usuário digita
+        buscaInput.addEventListener('input', function() {
+          clearTimeout(window.buscaTimeout);
+          window.buscaTimeout = setTimeout(function() {
+            filtroForm.submit();
+          }, 500);
+        });
+      }
+    });
+  </script>
 </body>
 </html>
 
